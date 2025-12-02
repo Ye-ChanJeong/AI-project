@@ -1,0 +1,5 @@
+streamlit
+openai>=1.0.0
+requests
+folium
+streamlit-folium
