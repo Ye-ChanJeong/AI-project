@@ -1,9 +1,21 @@
 import streamlit as st
+import os
+from dotenv import load_dotenv  # 추가된 부분
 from openai import OpenAI
 import requests
 import folium
 import streamlit.components.v1 as components
 import re
+
+# -----------------------------------------------------------
+# 🔐 환경 변수 로드 (수정됨)
+# -----------------------------------------------------------
+load_dotenv() # .env 파일 로드
+
+# .env 파일에 저장된 키 이름으로 가져오기
+# (파일에 OPENAI_API_KEY=..., KAKAO_API_KEY=... 로 저장되어 있어야 함)
+env_openai_key = os.getenv("OPENAI_API_KEY")
+env_kakao_key = os.getenv("KAKAO_API_KEY")
 
 
 # -----------------------------------------------------------
@@ -29,7 +41,7 @@ if "map_html" not in st.session_state:
 
 
 # -----------------------------------------------------------
-# Kakao 헬퍼들
+# Kakao 헬퍼들 (원본 그대로 유지)
 # -----------------------------------------------------------
 def get_center_from_location(location_text, kakao_key):
     """동네 이름 → 대략 중심좌표"""
@@ -105,7 +117,7 @@ def get_nearby_places(keyword, x, y, kakao_key, radius=800):
 
 
 # -----------------------------------------------------------
-# GPT 헬퍼들
+# GPT 헬퍼들 (원본 그대로 유지)
 # -----------------------------------------------------------
 def ask_gpt_for_search_keyword(client, query):
     """
@@ -130,7 +142,7 @@ def ask_gpt_for_search_keyword(client, query):
 
 키워드: <검색어>
 """
-
+    # 네가 확인했다는 원본 코드 유지
     res = client.responses.create(
         model="gpt-5-mini",
         input=prompt
@@ -166,7 +178,7 @@ def ask_gpt_for_summary(client, query, places):
 형식:
 1) 설명:
 """
-
+    # 네가 확인했다는 원본 코드 유지
     res = client.responses.create(
         model="gpt-5-mini",
         input=prompt
@@ -175,12 +187,11 @@ def ask_gpt_for_summary(client, query, places):
 
 
 # -----------------------------------------------------------
-# 🔹 입력 폼 (버튼 눌렀을 때만 검색 실행)
+# 🔹 입력 폼 (수정됨: API Key 입력창 제거)
 #   👉 기준 지역을 위로, 하고 싶은 활동을 아래로 배치
 # -----------------------------------------------------------
 with st.form("search_form"):
-    openai_key = st.text_input("🔑 OpenAI API Key", type="password")
-    kakao_key = st.text_input("🗺️ Kakao REST API Key (KakaoAK ...)", type="password")
+    # 원래 있던 st.text_input(키 입력) 두 줄 삭제함
 
     # 1. 기준 구역이 위
     location_text = st.text_input("📍 기준 지역 (예: 부경대, 부산대, 서면, 해운대)", "")
@@ -195,28 +206,30 @@ with st.form("search_form"):
 # 🔥 검색 로직 (폼 제출 시 한 번만 실행)
 # -----------------------------------------------------------
 if submitted:
-    if not openai_key:
-        st.error("❌ OpenAI Key가 필요합니다.")
+    # (수정됨) 입력창 값이 아니라 환경변수 값 확인
+    if not env_openai_key:
+        st.error("❌ .env 파일에 OpenAI Key가 없습니다.")
         st.stop()
-    if not kakao_key:
-        st.error("❌ Kakao REST API Key가 필요합니다.")
+    if not env_kakao_key:
+        st.error("❌ .env 파일에 Kakao REST API Key가 없습니다.")
         st.stop()
     if not query:
         st.error("❌ 검색어를 입력하세요.")
         st.stop()
 
-    client = OpenAI(api_key=openai_key)
+    # (수정됨) 환경변수 키 사용
+    client = OpenAI(api_key=env_openai_key)
 
     # 1) GPT에게 검색 키워드 추출 맡기기
     keyword = ask_gpt_for_search_keyword(client, query)
     if not keyword:
         keyword = "맛집"  # 최종 안전 장치
 
-    # 2) 중심 좌표 (지하철 기준)
-    cx, cy = get_center_from_nearest_subway(location_text, kakao_key)
+    # 2) 중심 좌표 (지하철 기준) -> (수정됨) 환경변수 키 전달
+    cx, cy = get_center_from_nearest_subway(location_text, env_kakao_key)
 
-    # 3) Kakao 실제 장소 검색
-    places = get_nearby_places(keyword, cx, cy, kakao_key)
+    # 3) Kakao 실제 장소 검색 -> (수정됨) 환경변수 키 전달
+    places = get_nearby_places(keyword, cx, cy, env_kakao_key)
 
     if not places:
         st.error("❌ 주변에서 해당 키워드로 찾은 장소가 없어요. 다른 표현으로 다시 시도해줘!")
