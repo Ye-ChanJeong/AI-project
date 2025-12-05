@@ -137,6 +137,7 @@ if submitted:
     st.session_state.recent_search = st.session_state.recent_search[:5]
 
     # 지도 생성
+    
     m = folium.Map(location=[cy, cx], zoom_start=15)
     for p in st.session_state.places:
         folium.Marker([float(p["y"]), float(p["x"])], popup=p["place_name"]).add_to(m)
@@ -194,9 +195,9 @@ with st.sidebar:
 
     # 🎲 랜덤 추천
     st.subheader("🎲 랜덤 추천")
-    if st.button("오늘의 랜덤 가게 뽑기 🍀"):
+    if st.button("오늘의 랜덤  뽑기 🍀"):
         st.success("오늘 추천 👉 " + random.choice([
-            "라면", "삼겹살", "파스타", "마라탕", "초밥", "카페", "디저트", "핫플"
+            "라면", "삼겹살", "파스타", "마라탕", "초밥", "카페", "디저트", "돈까스"
         ]))
 
 
